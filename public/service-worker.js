@@ -1,3 +1,5 @@
+console.log("Hello from service worker!");
+
 const FILES_TO_CACHE = [
     "/",
     "/index.html",
@@ -19,14 +21,13 @@ self.addEventListener("install", function(evt) {
   evt.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       console.log("Your files were pre-cached successfully!");
-      return cache.addAll(FILES_TO_CACHE);
+      cache.addAll(FILES_TO_CACHE);
     })
   );
 
   self.skipWaiting();
 });
 
-// activate
 self.addEventListener("activate", function(evt) {
   evt.waitUntil(
     caches.keys().then(keyList => {
@@ -63,7 +64,7 @@ self.addEventListener("fetch", function(evt) {
             // Network request failed, try to get it from the cache.
             return cache.match(evt.request);
           });
-      }).catch(err => console.log(err))
+      })
     );
 
     return;
@@ -71,8 +72,11 @@ self.addEventListener("fetch", function(evt) {
 
   // if the request is not for the API, serve static assets using "offline-first" approach.
   evt.respondWith(
-    caches.match(evt.request).then(function(response) {
-      return response || fetch(evt.request);
+    caches.open(CACHE_NAME).then(cache => {
+      return caches.match(evt.request).then(function(response) {
+        return response || fetch(evt.request);
+      });
     })
   );
 });
+
